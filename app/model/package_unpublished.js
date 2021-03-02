@@ -1,23 +1,24 @@
 'use strict';
 
+const utils = require('../utils/model_utils');
+
 /*
-CREATE TABLE IF NOT EXISTS `package_readme` (
+CREATE TABLE IF NOT EXISTS `module_unpublished` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
  `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
  `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
- `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
- `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
- `readme` longtext COMMENT 'the latest version readme',
+ `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package name',
+ `package` longtext COMMENT 'base info: tags, time, maintainers, description, versions',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name` (`name`),
  KEY `idx_gmt_modified` (`gmt_modified`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package latest readme';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package unpublished info';
 */
 
 module.exports = app => {
   const { BIGINT, STRING, TEXT, DATE } = app.Sequelize;
 
-  const Model = app.model.define('PackageReadme', {
+  const Model = app.model.define('PackageUnpublished', {
     id: {
       type: BIGINT(20).UNSIGNED,
       primaryKey: true,
@@ -34,24 +35,19 @@ module.exports = app => {
     name: {
       type: STRING(214),
       allowNull: false,
-      comment: 'module name',
+      comment: 'package name',
       charset: 'ascii',
       collate: 'ascii_general_ci',
     },
-    version: {
-      type: STRING(100),
-      allowNull: false,
-      comment: 'module latest version',
-      charset: 'ascii',
-      collate: 'ascii_general_ci',
-    },
-    readme: {
+    package: {
       type: TEXT('long'),
-      comment: 'latest version readme',
+      comment: 'base info: tags, time, maintainers, description, versions',
+      get: utils.JSONGetter('package'),
+      set: utils.JSONSetter('package'),
     },
   }, {
-    tableName: 'package_readme',
-    comment: 'package latest readme',
+    tableName: 'module_unpublished',
+    comment: 'package unpublished info',
     indexes: [
       {
         name: 'uk_name',
@@ -63,14 +59,6 @@ module.exports = app => {
         fields: [ 'gmt_modified' ],
       },
     ],
-  });
-
-  Object.assign(Model, {
-    async findByName(name) {
-      return await this.find({
-        where: { name },
-      });
-    },
   });
 
   return Model;

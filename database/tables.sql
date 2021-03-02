@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `downloads` (
   KEY `idx_date` (`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module download total info';
 
--- module_abbreviated.js -------------------------------------------------------
+-- module_abbreviated_version.js -----------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `module_abbreviated` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
@@ -51,11 +51,10 @@ CREATE TABLE IF NOT EXISTS `module_abbreviated` (
  `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
  `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
  `package` longtext COMMENT 'the abbreviated metadata',
- `publish_time` bigint(20) unsigned COMMENT 'the publish time',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name_version` (`name`,`version`),
  KEY `idx_gmt_modified` (`gmt_modified`),
- KEY `idx_publish_time` (`publish_time`)
+ KEY `idx_gmt_create` (`gmt_create`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module abbreviated info';
 
 -- module_deps.js --------------------------------------------------------------
@@ -96,18 +95,6 @@ CREATE TABLE IF NOT EXISTS `module_log` (
  KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module sync log';
 
--- module_maintainer.js --------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `module_maintainer` (
- `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
- `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
- `user` varchar(100) NOT NULL COMMENT 'user name',
- `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
- PRIMARY KEY (`id`),
- UNIQUE KEY `uk_user_module_name` (`user`,`name`),
- KEY `idx_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='private module maintainers';
-
 -- module_star.js --------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `module_star` (
@@ -119,19 +106,6 @@ CREATE TABLE IF NOT EXISTS `module_star` (
  UNIQUE KEY `uk_user_module_name` (`user`,`name`),
  KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module star';
-
--- module_unpublished.js -------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `module_unpublished` (
- `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
- `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
- `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
- `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
- `package` longtext COMMENT 'base info: tags, time, maintainers, description, versions',
- PRIMARY KEY (`id`),
- UNIQUE KEY `uk_name` (`name`),
- KEY `idx_gmt_modified` (`gmt_modified`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module unpublished info';
 
 -- module_version.js -----------------------------------------------------------
 
@@ -147,25 +121,27 @@ CREATE TABLE IF NOT EXISTS `module` (
  `dist_shasum` varchar(100) DEFAULT NULL COMMENT 'module dist SHASUM',
  `dist_tarball` varchar(2048) DEFAULT NULL COMMENT 'module dist tarball',
  `dist_size` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'module dist size',
- `publish_time` bigint(20) unsigned COMMENT 'module publish time',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name_version` (`name`,`version`),
  KEY `idx_gmt_modified` (`gmt_modified`),
- KEY `idx_publish_time` (`publish_time`),
+ KEY `idx_gmt_create` (`gmt_create`),
  KEY `idx_author` (`author`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module version info';
 
--- npm_module_maintainer.js ----------------------------------------------------
+-- module_version_readme.js ----------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `npm_module_maintainer` (
+CREATE TABLE IF NOT EXISTS `module_readme` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
  `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
- `user` varchar(100) NOT NULL COMMENT 'user name',
+ `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
  `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
+ `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
+ `readme` longtext COMMENT 'the module version readme',
+ `readme_filename` varchar(100) NOT NULL COMMENT 'readme filename',
  PRIMARY KEY (`id`),
- UNIQUE KEY `uk_user_module_name` (`user`,`name`),
- KEY `idx_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='npm original module maintainers';
+ UNIQUE KEY `uk_name_version` (`name`, `version`),
+ KEY `idx_gmt_modified` (`gmt_modified`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module version readme';
 
 -- package.js ------------------------------------------------------------------
 
@@ -177,25 +153,49 @@ CREATE TABLE IF NOT EXISTS `package` (
  `author` varchar(100) NOT NULL COMMENT 'first publish author name',
  `description` longtext COMMENT 'module description',
  `license` varchar(100) NOT NULL COMMENT 'license of the package',
+ `private` tinyint(1) DEFAULT '0' COMMENT 'private package or not, 1: true, other: false',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name` (`name`),
  KEY `idx_gmt_modified` (`gmt_modified`),
  KEY `idx_author` (`author`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package info';
 
--- package_readme.js -----------------------------------------------------------
+-- package_unpublished.js ------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `package_readme` (
+CREATE TABLE IF NOT EXISTS `module_unpublished` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
  `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
  `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
- `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
- `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
- `readme` longtext COMMENT 'the latest version readme',
+ `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package name',
+ `package` longtext COMMENT 'base info: tags, time, maintainers, description, versions',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name` (`name`),
  KEY `idx_gmt_modified` (`gmt_modified`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package latest readme';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package unpublished info';
+
+-- private_package_maintainer.js -----------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `module_maintainer` (
+ `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+ `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
+ `user` varchar(100) NOT NULL COMMENT 'user name',
+ `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package name',
+ PRIMARY KEY (`id`),
+ UNIQUE KEY `uk_user_package_name` (`user`,`name`),
+ KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='private package maintainers';
+
+-- public_package_maintainer.js ------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `npm_module_maintainer` (
+ `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+ `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
+ `user` varchar(100) NOT NULL COMMENT 'user name',
+ `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package name',
+ PRIMARY KEY (`id`),
+ UNIQUE KEY `uk_user_package_name` (`user`,`name`),
+ KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='npm original package maintainers';
 
 -- tag.js ----------------------------------------------------------------------
 
@@ -203,14 +203,13 @@ CREATE TABLE IF NOT EXISTS `tag` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
  `gmt_create` datetime(6) NOT NULL COMMENT 'create time',
  `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
- `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
+ `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package name',
  `tag` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'tag name',
- `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
- `module_id` bigint(20) unsigned NOT NULL COMMENT 'module id',
+ `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'package version',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name_tag` (`name`, `tag`),
  KEY `idx_gmt_modified` (`gmt_modified`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module tag';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='package tag';
 
 -- total.js --------------------------------------------------------------------
 
@@ -240,10 +239,9 @@ CREATE TABLE IF NOT EXISTS `user` (
  `gmt_modified` datetime(6) NOT NULL COMMENT 'modified time',
  `name` varchar(100) NOT NULL COMMENT 'user name',
  `salt` varchar(100) NOT NULL COMMENT 'user salt',
- `password_sha` varchar(100) NOT NULL COMMENT 'user password hash',
+ `password_sha` varchar(100) NOT NULL COMMENT 'user password hash, 64 len is sha256, 40 len is sha1',
  `ip` varchar(64) NOT NULL COMMENT 'user last request ip',
  `roles` varchar(200) NOT NULL DEFAULT '[]' COMMENT 'user roles',
- `rev` varchar(40) NOT NULL COMMENT 'user rev',
  `email` varchar(400) NOT NULL COMMENT 'user email',
  `json` longtext COMMENT 'json details',
  `npm_user` tinyint(1) DEFAULT '0' COMMENT 'user sync from npm or not, 1: true, other: false',

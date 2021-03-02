@@ -15,9 +15,15 @@ module.exports = class AppBootHook {
 
   async willReady() {
     // All plugins have started, can do some thing before app ready
-    const ctx = this.app.createAnonymousContext();
+    const { app } = this;
+    app.nfs = new app.config.nfs.class(app.config.nfs.options);
+
+    const ctx = app.createAnonymousContext();
     // make sure total table has the 'total' row.
     await ctx.model.Total.init();
+
+    // add custom validator rules
+    require('./app/validator_rule')(app);
   }
 
   async didReady() {

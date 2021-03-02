@@ -2,7 +2,6 @@
 
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
-[![Build Status](https://dev.azure.com/eggjs/egg/_apis/build/status/cnpm.registry.cnpmjs.org)](https://dev.azure.com/eggjs/egg/_build/latest?definitionId=9)
 [![Test coverage][codecov-image]][codecov-url]
 [![David deps][david-image]][david-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
@@ -110,6 +109,10 @@ node_modules/.bin/sequelize db:migrate:undo
 > the `name` + `version` union index key(214 * 4 + 100 * 4 = 1256) will exceed the MySQL index length limit.
 > And The `name` ends up being part of a URL, an argument on the command line, and a folder name. Therefore, the `name` can't contain any non-URL-safe characters.
 > So we can use `ascii` charset to store `name` and `version` on MySQL. The max length is 314 bytes.
+
+## Development Helpful Documents
+
+- [Sequelize Documents](http://docs.sequelizejs.com/)
 
 ## MySQL Character Set
 

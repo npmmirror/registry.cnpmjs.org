@@ -1,5 +1,7 @@
 'use strict';
 
+const utils = require('../utils/model_utils');
+
 /*
 CREATE TABLE IF NOT EXISTS `module_abbreviated` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
@@ -8,18 +10,17 @@ CREATE TABLE IF NOT EXISTS `module_abbreviated` (
  `name` varchar(214) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module name',
  `version` varchar(100) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'module version',
  `package` longtext COMMENT 'the abbreviated metadata',
- `publish_time` bigint(20) unsigned COMMENT 'the publish time',
  PRIMARY KEY (`id`),
  UNIQUE KEY `uk_name_version` (`name`,`version`),
  KEY `idx_gmt_modified` (`gmt_modified`),
- KEY `idx_publish_time` (`publish_time`)
+ KEY `idx_gmt_create` (`gmt_create`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT='module abbreviated info';
 */
 
 module.exports = app => {
   const { STRING, BIGINT, TEXT, DATE } = app.Sequelize;
 
-  const Model = app.model.define('ModuleAbbreviated', {
+  const Model = app.model.define('ModuleAbbreviatedVersion', {
     id: {
       type: BIGINT(20).UNSIGNED,
       primaryKey: true,
@@ -50,10 +51,8 @@ module.exports = app => {
     package: {
       type: TEXT('long'),
       comment: 'package.json',
-    },
-    publish_time: {
-      type: BIGINT(20).UNSIGNED,
-      allowNull: true,
+      get: utils.JSONGetter('package'),
+      set: utils.JSONSetter('package'),
     },
   }, {
     tableName: 'module_abbreviated',
@@ -69,18 +68,10 @@ module.exports = app => {
         fields: [ 'gmt_modified' ],
       },
       {
-        name: 'idx_publish_time',
-        fields: [ 'publish_time' ],
+        name: 'idx_gmt_modified',
+        fields: [ 'gmt_modified' ],
       },
     ],
-  });
-
-  Object.assign(Model, {
-    async findByNameAndVersion(name, version) {
-      return await this.find({
-        where: { name, version },
-      });
-    },
   });
 
   return Model;
